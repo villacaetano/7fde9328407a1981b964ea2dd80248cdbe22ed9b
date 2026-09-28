@@ -170,52 +170,42 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
 }
 
 
-.calendar-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
-.calendar-scroll::-webkit-scrollbar{height:6px}
-.booking-calendar{min-width:700px}
+.calendar-scroll{overflow:hidden;border-radius:14px}
+.booking-calendar{min-width:0}
 .cal-day{min-height:112px}
-.cal-booking{font-size:10px;line-height:1.25}
+.cal-booking{font-size:10px;line-height:1.25;cursor:pointer}
 .cal-booking.stay{background:var(--accent);color:var(--card);font-weight:800}
 .cal-booking.checkin{background:var(--accent);color:var(--card);border-left:4px solid var(--ok);font-weight:850}
 .cal-booking.checkout{background:var(--source-bg);color:var(--source-text);opacity:.8;font-weight:600;border-left:3px solid var(--border)}
+.booking-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.booking-modal.show{display:flex}
+.booking-modal-card{width:min(430px,100%);background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:22px}
+.booking-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.booking-modal-title{font-size:19px;font-weight:800}
+.booking-modal-close{border:0;background:var(--source-bg);color:var(--text);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:20px}
+.booking-modal-details{margin-top:16px;display:grid;gap:10px;font-size:13px}
+.booking-modal-row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:9px}
+.booking-modal-row span:first-child{color:var(--muted)}
+.booking-modal-row strong{text-align:right}
 @media(max-width:600px){
   .container{padding:12px}
   .section-title{font-size:18px;margin-top:22px}
   .status{font-size:14px;padding:9px 13px}
-  .calendar-scroll{overflow:visible}
-  .booking-calendar{min-width:0;width:100%;grid-template-columns:repeat(7,minmax(0,1fr));border-radius:12px}
-  .cal-day{min-height:58px;padding:5px 3px;text-align:center}
+  .booking-calendar{min-width:0;width:100%}
+  .cal-day{min-height:54px;padding:5px}
   .cal-number{font-size:11px;margin-bottom:2px}
-  .cal-booking{display:block;height:7px;width:7px;margin:4px auto 0;padding:0;border-radius:50%;font-size:0;line-height:0;overflow:hidden}
-  .cal-booking.stay,.cal-booking.checkin{background:var(--accent);border:0}
-  .cal-booking.checkin{box-shadow:0 0 0 2px var(--ok)}
-  .cal-booking.checkout{background:var(--source-text);border:0;opacity:.45}
-  .cal-day.has-booking{cursor:pointer}
-  .cal-day.has-booking:active{background:var(--soft)}
+  .cal-booking{height:7px;width:7px;padding:0;margin:4px 0 0;border-radius:50%;font-size:0;overflow:hidden}
+  .cal-booking.checkin{border-left:0;border:2px solid var(--ok)}
+  .cal-booking.checkout{border-left:0;opacity:.7}
   .calendar-legend{gap:10px;flex-wrap:wrap}
-  .mobile-booking-hint{display:block!important}
 }
-@media(min-width:601px){.mobile-booking-hint{display:none!important}}
-
-.booking-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:14px}
-.booking-modal.open{display:flex}
-.booking-modal-card{width:min(520px,100%);max-height:78vh;overflow:auto;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
-.booking-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.booking-modal-title{font-size:17px;font-weight:800}
-.booking-modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--table);color:var(--text);font-size:22px;line-height:1;cursor:pointer}
-.booking-detail{padding:12px 0;border-top:1px solid var(--border)}
-.booking-detail:first-child{border-top:0;padding-top:0}
-.booking-detail-name{font-weight:800;margin-bottom:5px}
-.booking-detail-meta{font-size:12px;color:var(--muted);line-height:1.6}
-.booking-detail-value{margin-top:6px;font-weight:800}
-.mobile-booking-hint{font-size:11px;color:var(--muted);margin-top:10px}
 </style>
 </head>
 <body>
 <main class="container">
 <div id="error" class="error"></div>
 <header>
-<img id="siteLogo" class="logo" src="../assets/images/brand/villa-caetano/logo-black.png" alt="Villa Caetano">
+<img id="siteLogo" class="logo" src="assets/black-logo.png" alt="Villa Caetano">
 <div class="header-right">
 <div class="header-controls">
 <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
@@ -279,22 +269,21 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
     <span><i class="legend-dot checkin"></i> Check-in</span>
     <span><i class="legend-dot checkout"></i> Check-out</span>
   </div>
-  <div class="mobile-booking-hint">Tap a booked day to view reservation details.</div>
-</div>
-
-<div class="booking-modal" id="bookingModal" aria-hidden="true">
-  <div class="booking-modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
-    <div class="booking-modal-head">
-      <div class="booking-modal-title" id="bookingModalTitle">Booking details</div>
-      <button class="booking-modal-close" id="bookingModalClose" type="button" aria-label="Close">×</button>
-    </div>
-    <div id="bookingModalBody"></div>
-  </div>
 </div>
 
 <h2 class="section-title">Monthly Performance</h2>
 <section class="card"><div id="monthly"></div></section>
 
+
+<div id="bookingModal" class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+  <div class="booking-modal-card">
+    <div class="booking-modal-head">
+      <div id="bookingModalTitle" class="booking-modal-title">Booking details</div>
+      <button id="bookingModalClose" class="booking-modal-close" type="button" aria-label="Close">×</button>
+    </div>
+    <div id="bookingModalDetails" class="booking-modal-details"></div>
+  </div>
+</div>
 <footer>Villa Caetano · Rental Dashboard</footer>
 </main>
 
@@ -307,8 +296,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
   window.addEventListener("DOMContentLoaded", function(){
     const logo = document.getElementById("siteLogo");
     if (logo) logo.src = theme === "dark"
-      ? "../assets/images/brand/villa-caetano/logo-white.png"
-      : "../assets/images/brand/villa-caetano/logo-black.png";
+      ? "assets/logo-white.png"
+      : "assets/black-logo.png";
   });
 
   window.addEventListener("DOMContentLoaded", function(){
@@ -319,8 +308,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
       const logo = document.getElementById("siteLogo");
       if (logo) {
         logo.src = dark
-          ? "../assets/images/brand/villa-caetano/logo-white.png"
-          : "../assets/images/brand/villa-caetano/logo-black.png";
+          ? "assets/logo-white.png"
+          : "assets/black-logo.png";
       }
       icon.textContent = dark ? "☀" : "☾";
       button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
@@ -340,7 +329,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
 <script>
 const SUPABASE_URL=
 "https://xmpnwjsqisdvwpoyrgnv.supabase.co";
-const SUPABASE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
+const SUPABASE_KEY="sb_publishable_zxOKE_9GzAg0qXfMXxY6iw__KFKMih6";
 const RPC_URL=`${SUPABASE_URL}/rest/v1/rpc/get_villa_caetano_dashboard`;
 
 const money=v=>"₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:0});
@@ -427,6 +416,27 @@ loadDashboard();setInterval(loadDashboard,5*60*1000);
     return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  function openBooking(b){
+    const modal = document.getElementById("bookingModal");
+    const details = document.getElementById("bookingModalDetails");
+    if(!modal || !details || !b) return;
+
+    document.getElementById("bookingModalTitle").textContent = b.guest || "Booking details";
+    details.innerHTML = `
+      <div class="booking-modal-row"><span>Stay</span><strong>${esc(b.check_in)} → ${esc(b.check_out)}</strong></div>
+      <div class="booking-modal-row"><span>Nights</span><strong>${esc(b.nights)}</strong></div>
+      <div class="booking-modal-row"><span>Guests</span><strong>${esc(b.adults)} adults${Number(b.kids) ? ` · ${esc(b.kids)} kids` : ""}</strong></div>
+      <div class="booking-modal-row"><span>Source</span><strong>${esc(b.source)}</strong></div>
+      <div class="booking-modal-row"><span>Reservation</span><strong>${esc(b.reservation_id)}</strong></div>
+      <div class="booking-modal-row"><span>Booking value</span><strong>${money(b.nbv)}</strong></div>
+    `;
+    modal.classList.add("show");
+  }
+
+  function closeBooking(){
+    document.getElementById("bookingModal")?.classList.remove("show");
+  }
+
   window.renderBookingCalendar = function(bookings){
     bookingData = Array.isArray(bookings) ? bookings : [];
     const root = document.getElementById("bookingCalendar");
@@ -439,7 +449,7 @@ loadDashboard();setInterval(loadDashboard,5*60*1000);
 
     const first = new Date(y,m,1);
     const days = new Date(y,m+1,0).getDate();
-    const offset = (first.getDay()+6)%7; // Monday first
+    const offset = (first.getDay()+6)%7;
     const today = dateKey(new Date());
 
     let out = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
@@ -450,83 +460,61 @@ loadDashboard();setInterval(loadDashboard,5*60*1000);
     for(let d=1;d<=days;d++){
       const date = new Date(y,m,d);
       const key = dateKey(date);
-      const staying = bookingData.filter(b => {
-        if(!b.check_in || !b.check_out) return false;
-        return key >= b.check_in && key < b.check_out;
-      });
-      const checkins = bookingData.filter(b => b.check_in === key);
+
+      const staying = bookingData.filter(b =>
+        b.check_in && b.check_out && key >= b.check_in && key < b.check_out
+      );
       const checkouts = bookingData.filter(b => b.check_out === key);
 
       let content = `<div class="cal-number">${d}</div>`;
+
       staying.slice(0,3).forEach(b=>{
         const ci = b.check_in === key;
-        content += `<div class="cal-booking ${ci?'checkin':'stay'}" title="${esc(b.guest)} · ${esc(b.check_in)} → ${esc(b.check_out)}">${ci?'↘ ':''}${esc(b.guest)}</div>`;
+        content += `<div class="cal-booking ${ci?'checkin':'stay'}"
+          data-booking="${esc(b.reservation_id)}"
+          title="${esc(b.guest)} · ${esc(b.check_in)} → ${esc(b.check_out)}">${esc(b.guest)}</div>`;
       });
-      if(staying.length > 3) content += `<div class="muted" style="font-size:10px;margin-top:3px">+${staying.length-3} more</div>`;
 
-      // Checkout day is not an occupied night, so keep it visually separate and lighter.
-      if(checkouts.length){
-        checkouts.slice(0,2).forEach(b=>content += `<div class="cal-booking checkout">↗ ${esc(b.guest)}</div>`);
-      }
+      if(staying.length > 3)
+        content += `<div class="muted" style="font-size:10px;margin-top:3px">+${staying.length-3} more</div>`;
 
-      const hasBooking = staying.length || checkouts.length;
-      out += `<div class="cal-day ${key===today?'today':''} ${hasBooking?'has-booking':''}" ${hasBooking?`data-calendar-date="${key}" tabindex="0" role="button"`:''}>${content}</div>`;
+      checkouts.slice(0,2).forEach(b=>{
+        content += `<div class="cal-booking checkout"
+          data-booking="${esc(b.reservation_id)}"
+          title="${esc(b.guest)} · checkout">${esc(b.guest)}</div>`;
+      });
+
+      out += `<div class="cal-day ${key===today?'today':''}">${content}</div>`;
     }
+
     root.innerHTML = out;
+
+    root.querySelectorAll("[data-booking]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        const id = el.dataset.booking;
+        const booking = bookingData.find(b => String(b.reservation_id) === String(id));
+        if(booking) openBooking(booking);
+      });
+    });
   };
-
-  function openMobileBookingDetails(key){
-    if(window.innerWidth > 600) return;
-    const bookings = bookingData.filter(b =>
-      (b.check_in && b.check_out && key >= b.check_in && key < b.check_out) ||
-      b.check_in === key || b.check_out === key
-    );
-    if(!bookings.length) return;
-
-    const modal = document.getElementById("bookingModal");
-    const title = document.getElementById("bookingModalTitle");
-    const body = document.getElementById("bookingModalBody");
-    if(!modal || !title || !body) return;
-
-    const date = new Date(key + "T12:00:00");
-    title.textContent = date.toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
-    body.innerHTML = bookings.map(b => {
-      const status = b.check_in === key ? "Check-in" : (b.check_out === key ? "Check-out" : "Staying");
-      return `<div class="booking-detail">
-        <div class="booking-detail-name">${esc(b.guest)} <span style="font-size:11px;color:var(--muted);font-weight:600">· ${status}</span></div>
-        <div class="booking-detail-meta">${esc(b.check_in)} → ${esc(b.check_out)} · ${esc(b.nights)} nights<br>${esc(b.adults)} adults${Number(b.kids||0)>0?` · ${esc(b.kids)} kids`:''} · ${esc(b.source||'')}</div>
-        <div class="booking-detail-value">₹${Number(b.nbv||0).toLocaleString("en-IN",{maximumFractionDigits:0})}</div>
-      </div>`;
-    }).join("");
-
-    modal.classList.add("open");
-    modal.setAttribute("aria-hidden","false");
-  }
-
-  function closeBookingModal(){
-    const modal=document.getElementById("bookingModal");
-    if(modal){ modal.classList.remove("open"); modal.setAttribute("aria-hidden","true"); }
-  }
-
-  document.addEventListener("click", e=>{
-    const day=e.target.closest("[data-calendar-date]");
-    if(day) openMobileBookingDetails(day.dataset.calendarDate);
-    if(e.target.id === "bookingModal" || e.target.id === "bookingModalClose") closeBookingModal();
-  });
-  document.addEventListener("keydown", e=>{
-    if(e.key === "Escape") closeBookingModal();
-    const day=e.target.closest?.("[data-calendar-date]");
-    if(day && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openMobileBookingDetails(day.dataset.calendarDate); }
-  });
 
   document.addEventListener("DOMContentLoaded",()=>{
     document.getElementById("calPrev")?.addEventListener("click",()=>{
       calendarDate.setMonth(calendarDate.getMonth()-1);
       window.renderBookingCalendar(bookingData);
     });
+
     document.getElementById("calNext")?.addEventListener("click",()=>{
       calendarDate.setMonth(calendarDate.getMonth()+1);
       window.renderBookingCalendar(bookingData);
+    });
+
+    document.getElementById("bookingModalClose")?.addEventListener("click", closeBooking);
+    document.getElementById("bookingModal")?.addEventListener("click", e=>{
+      if(e.target.id === "bookingModal") closeBooking();
+    });
+    document.addEventListener("keydown", e=>{
+      if(e.key === "Escape") closeBooking();
     });
   });
 })();
