@@ -182,18 +182,40 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
   .container{padding:12px}
   .section-title{font-size:18px;margin-top:22px}
   .status{font-size:14px;padding:9px 13px}
-  .booking-calendar{min-width:700px}
-  .cal-day{min-height:92px}
-  .cal-number{font-size:11px}
+  .calendar-scroll{overflow:visible}
+  .booking-calendar{min-width:0;width:100%;grid-template-columns:repeat(7,minmax(0,1fr));border-radius:12px}
+  .cal-day{min-height:58px;padding:5px 3px;text-align:center}
+  .cal-number{font-size:11px;margin-bottom:2px}
+  .cal-booking{display:block;height:7px;width:7px;margin:4px auto 0;padding:0;border-radius:50%;font-size:0;line-height:0;overflow:hidden}
+  .cal-booking.stay,.cal-booking.checkin{background:var(--accent);border:0}
+  .cal-booking.checkin{box-shadow:0 0 0 2px var(--ok)}
+  .cal-booking.checkout{background:var(--source-text);border:0;opacity:.45}
+  .cal-day.has-booking{cursor:pointer}
+  .cal-day.has-booking:active{background:var(--soft)}
   .calendar-legend{gap:10px;flex-wrap:wrap}
+  .mobile-booking-hint{display:block!important}
 }
+@media(min-width:601px){.mobile-booking-hint{display:none!important}}
+
+.booking-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.45);padding:14px}
+.booking-modal.open{display:flex}
+.booking-modal-card{width:min(520px,100%);max-height:78vh;overflow:auto;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.booking-modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.booking-modal-title{font-size:17px;font-weight:800}
+.booking-modal-close{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--table);color:var(--text);font-size:22px;line-height:1;cursor:pointer}
+.booking-detail{padding:12px 0;border-top:1px solid var(--border)}
+.booking-detail:first-child{border-top:0;padding-top:0}
+.booking-detail-name{font-weight:800;margin-bottom:5px}
+.booking-detail-meta{font-size:12px;color:var(--muted);line-height:1.6}
+.booking-detail-value{margin-top:6px;font-weight:800}
+.mobile-booking-hint{font-size:11px;color:var(--muted);margin-top:10px}
 </style>
 </head>
 <body>
 <main class="container">
 <div id="error" class="error"></div>
 <header>
-<img id="siteLogo" class="logo" src="assets/black-logo.png" alt="Villa Caetano">
+<img id="siteLogo" class="logo" src="../assets/images/brand/villa-caetano/logo-black.png" alt="Villa Caetano">
 <div class="header-right">
 <div class="header-controls">
 <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
@@ -257,6 +279,17 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
     <span><i class="legend-dot checkin"></i> Check-in</span>
     <span><i class="legend-dot checkout"></i> Check-out</span>
   </div>
+  <div class="mobile-booking-hint">Tap a booked day to view reservation details.</div>
+</div>
+
+<div class="booking-modal" id="bookingModal" aria-hidden="true">
+  <div class="booking-modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+    <div class="booking-modal-head">
+      <div class="booking-modal-title" id="bookingModalTitle">Booking details</div>
+      <button class="booking-modal-close" id="bookingModalClose" type="button" aria-label="Close">×</button>
+    </div>
+    <div id="bookingModalBody"></div>
+  </div>
 </div>
 
 <h2 class="section-title">Monthly Performance</h2>
@@ -274,8 +307,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
   window.addEventListener("DOMContentLoaded", function(){
     const logo = document.getElementById("siteLogo");
     if (logo) logo.src = theme === "dark"
-      ? "assets/logo-white.png"
-      : "assets/black-logo.png";
+      ? "../assets/images/brand/villa-caetano/logo-white.png"
+      : "../assets/images/brand/villa-caetano/logo-black.png";
   });
 
   window.addEventListener("DOMContentLoaded", function(){
@@ -286,8 +319,8 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
       const logo = document.getElementById("siteLogo");
       if (logo) {
         logo.src = dark
-          ? "assets/logo-white.png"
-          : "assets/black-logo.png";
+          ? "../assets/images/brand/villa-caetano/logo-white.png"
+          : "../assets/images/brand/villa-caetano/logo-black.png";
       }
       icon.textContent = dark ? "☀" : "☾";
       button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
@@ -307,7 +340,7 @@ footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
 <script>
 const SUPABASE_URL=
 "https://xmpnwjsqisdvwpoyrgnv.supabase.co";
-const SUPABASE_KEY="sb_publishable_zxOKE_9GzAg0qXfMXxY6iw__KFKMih6";
+const SUPABASE_KEY="YOUR_SUPABASE_PUBLISHABLE_KEY";
 const RPC_URL=`${SUPABASE_URL}/rest/v1/rpc/get_villa_caetano_dashboard`;
 
 const money=v=>"₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:0});
@@ -436,10 +469,55 @@ loadDashboard();setInterval(loadDashboard,5*60*1000);
         checkouts.slice(0,2).forEach(b=>content += `<div class="cal-booking checkout">↗ ${esc(b.guest)}</div>`);
       }
 
-      out += `<div class="cal-day ${key===today?'today':''}">${content}</div>`;
+      const hasBooking = staying.length || checkouts.length;
+      out += `<div class="cal-day ${key===today?'today':''} ${hasBooking?'has-booking':''}" ${hasBooking?`data-calendar-date="${key}" tabindex="0" role="button"`:''}>${content}</div>`;
     }
     root.innerHTML = out;
   };
+
+  function openMobileBookingDetails(key){
+    if(window.innerWidth > 600) return;
+    const bookings = bookingData.filter(b =>
+      (b.check_in && b.check_out && key >= b.check_in && key < b.check_out) ||
+      b.check_in === key || b.check_out === key
+    );
+    if(!bookings.length) return;
+
+    const modal = document.getElementById("bookingModal");
+    const title = document.getElementById("bookingModalTitle");
+    const body = document.getElementById("bookingModalBody");
+    if(!modal || !title || !body) return;
+
+    const date = new Date(key + "T12:00:00");
+    title.textContent = date.toLocaleDateString("en-GB", {weekday:"long", day:"numeric", month:"long", year:"numeric"});
+    body.innerHTML = bookings.map(b => {
+      const status = b.check_in === key ? "Check-in" : (b.check_out === key ? "Check-out" : "Staying");
+      return `<div class="booking-detail">
+        <div class="booking-detail-name">${esc(b.guest)} <span style="font-size:11px;color:var(--muted);font-weight:600">· ${status}</span></div>
+        <div class="booking-detail-meta">${esc(b.check_in)} → ${esc(b.check_out)} · ${esc(b.nights)} nights<br>${esc(b.adults)} adults${Number(b.kids||0)>0?` · ${esc(b.kids)} kids`:''} · ${esc(b.source||'')}</div>
+        <div class="booking-detail-value">₹${Number(b.nbv||0).toLocaleString("en-IN",{maximumFractionDigits:0})}</div>
+      </div>`;
+    }).join("");
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+  }
+
+  function closeBookingModal(){
+    const modal=document.getElementById("bookingModal");
+    if(modal){ modal.classList.remove("open"); modal.setAttribute("aria-hidden","true"); }
+  }
+
+  document.addEventListener("click", e=>{
+    const day=e.target.closest("[data-calendar-date]");
+    if(day) openMobileBookingDetails(day.dataset.calendarDate);
+    if(e.target.id === "bookingModal" || e.target.id === "bookingModalClose") closeBookingModal();
+  });
+  document.addEventListener("keydown", e=>{
+    if(e.key === "Escape") closeBookingModal();
+    const day=e.target.closest?.("[data-calendar-date]");
+    if(day && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openMobileBookingDetails(day.dataset.calendarDate); }
+  });
 
   document.addEventListener("DOMContentLoaded",()=>{
     document.getElementById("calPrev")?.addEventListener("click",()=>{
