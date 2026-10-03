@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Villa Caetano — Rental Dashboard</title>
+<style>
+:root{
+  --bg:#f5f5f2;
+  --card:#ffffff;
+  --text:#202321;
+  --muted:#777b78;
+  --border:#e5e5e0;
+  --accent:#234d3c;
+  --soft:#eaf1ed;
+  --ok:#238b57;
+  --table:#fafaf8;
+  --source-bg:#f1f2ef;
+  --source-text:#5d625e;
+  --error-bg:#fff1f0;
+  --error-border:#f0c8c5;
+  --error-text:#8b3632;
+  --shadow:0 8px 30px rgba(20,25,22,.06);
+  --radius:18px;
+}
+html[data-theme="dark"]{
+  --bg:#151816;
+  --card:#1e2421;
+  --text:#eef2ef;
+  --muted:#9ba59f;
+  --border:#343d38;
+  --accent:#9bc5af;
+  --soft:#26352d;
+  --ok:#5bc98c;
+  --table:#191e1b;
+  --source-bg:#2b332f;
+  --source-text:#c3cbc6;
+  --error-bg:#351f1e;
+  --error-border:#69413e;
+  --error-text:#f0aaa4;
+  --shadow:0 8px 30px rgba(0,0,0,.20);
+}
+*{box-sizing:border-box}
+html{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  transition:background .2s ease,color .2s ease;
+}
+.container{max-width:1400px;margin:auto;padding:28px}
+header,.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  transition:background .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+header{
+  border-radius:22px;
+  padding:24px 28px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:22px;
+}
+.logo{width:220px;max-height:90px;object-fit:contain;object-position:left center}
+.header-right{text-align:right}
+.header-controls{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+.theme-toggle{
+  width:40px;height:40px;border:1px solid var(--border);border-radius:11px;
+  background:var(--card);color:var(--text);cursor:pointer;font-size:20px;
+  display:inline-flex;align-items:center;justify-content:center;
+  transition:background .2s ease,border-color .2s ease,color .2s ease,transform .15s ease;
+}
+.theme-toggle:hover{transform:translateY(-1px)}
+.status{
+  display:inline-flex;align-items:center;gap:9px;padding:10px 16px;border-radius:999px;
+  background:var(--soft);color:var(--accent);font-weight:800;font-size:15px;letter-spacing:.1px
+}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(35,139,87,.12)}
+.last-sync{color:var(--muted);font-size:12px;margin-top:8px}
+.section-title{font-size:20px;margin:28px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{border-radius:var(--radius);padding:20px}
+.metric-label{color:var(--muted);font-size:13px;margin-bottom:9px}
+.metric{font-size:27px;font-weight:750}
+.two-col{display:grid;grid-template-columns:1.25fr .75fr;gap:16px;margin-top:16px}
+.card-title{font-size:15px;font-weight:700;margin-bottom:16px}
+.financial-table{width:100%;border-collapse:collapse;font-size:13px}
+.financial-table td{padding:9px 0;border-bottom:1px solid var(--border)}
+.financial-table td:last-child{text-align:right;font-weight:650}
+.financial-table .total td{font-size:15px;font-weight:800;border-bottom:0;padding-top:13px}
+.calendar{display:grid;gap:10px}
+.calendar-item{
+  display:grid;grid-template-columns:115px 1fr auto;gap:15px;align-items:center;
+  padding:15px;border:1px solid var(--border);border-radius:13px;background:var(--table)
+}
+.calendar-date{font-weight:750;color:var(--accent)}
+.calendar-guest{font-weight:700}
+.booking-details{color:var(--muted);font-size:13px;margin-top:6px}
+.booking-price{font-weight:750}
+.source{
+  display:inline-block;margin-top:8px;padding:4px 8px;border-radius:7px;
+  background:var(--source-bg);color:var(--source-text);font-size:11px;font-weight:650
+}
+.month-row{
+  display:grid;grid-template-columns:130px 1fr 110px 100px;gap:12px;padding:12px 0;
+  border-bottom:1px solid var(--border);align-items:center;font-size:13px
+}
+.month-row:last-child{border-bottom:0}
+.month-name{font-weight:700}
+.muted{color:var(--muted)}
+.error{
+  display:none;background:var(--error-bg);border:1px solid var(--error-border);color:var(--error-text);
+  padding:14px;border-radius:12px;margin-bottom:16px;font-size:13px
+}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:30px 0 10px}
+@media(max-width:950px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+  .month-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .container{padding:14px}
+  header{padding:18px;flex-direction:column;align-items:flex-start}
+  .header-right{text-align:left;width:100%}
+  .header-controls{justify-content:flex-start}
+  .logo{width:190px}
+  .grid{gap:10px}
+  .card{padding:15px}
+  .metric{font-size:21px}
+  .calendar-item{grid-template-columns:1fr;gap:5px}
+  .month-row{grid-template-columns:1fr}
+}
+
+.booking-calendar-card{margin-top:16px}
+.calendar-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-month-title{font-size:18px;font-weight:750}
+.cal-btn{
+  width:36px;height:36px;border:1px solid var(--border);border-radius:10px;
+  background:var(--card);color:var(--text);font-size:23px;line-height:1;cursor:pointer
+}
+.booking-calendar{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.cal-weekday{padding:10px 8px;background:var(--table);color:var(--muted);font-size:11px;font-weight:750;text-transform:uppercase;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cal-day{
+  min-height:105px;padding:8px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);
+  background:var(--card);position:relative
+}
+.cal-day.empty{background:var(--table)}
+.cal-number{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:5px}
+.cal-day.today .cal-number{color:var(--accent)}
+.cal-booking{
+  display:block;margin-top:4px;padding:5px 6px;border-radius:7px;
+  background:var(--soft);color:var(--accent);font-size:10px;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.cal-booking.checkin{border-left:3px solid var(--ok)}
+.cal-booking.checkout{opacity:.72}
+.calendar-legend{display:flex;gap:18px;margin-top:12px;color:var(--muted);font-size:11px}
+.legend-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px}
+.legend-dot.checkin{background:var(--ok)}
+.legend-dot.checkout{opacity:.55}
+@media(max-width:700px){
+  .cal-day{min-height:78px;padding:5px}
+  .cal-booking{font-size:9px;padding:4px}
+  .cal-weekday{font-size:9px;padding:7px 3px}
+}
+
+
+.calendar-scroll{overflow:hidden;border-radius:14px}
+.booking-calendar{min-width:0}
+.cal-day{min-height:112px}
+.cal-booking{font-size:10px;line-height:1.25;cursor:pointer}
+.cal-booking.stay{background:var(--accent);color:var(--card);font-weight:800}
+.cal-booking.checkin{background:var(--accent);color:var(--card);border-left:4px solid var(--ok);font-weight:850}
+.cal-booking.checkout{background:var(--source-bg);color:var(--source-text);opacity:.8;font-weight:600;border-left:3px solid var(--border)}
+.booking-modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.booking-modal.show{display:flex}
+.booking-modal-card{width:min(430px,100%);background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.25);padding:22px}
+.booking-modal-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.booking-modal-title{font-size:19px;font-weight:800}
+.booking-modal-close{border:0;background:var(--source-bg);color:var(--text);width:34px;height:34px;border-radius:9px;cursor:pointer;font-size:20px}
+.booking-modal-details{margin-top:16px;display:grid;gap:10px;font-size:13px}
+.booking-modal-row{display:flex;justify-content:space-between;gap:16px;border-bottom:1px solid var(--border);padding-bottom:9px}
+.booking-modal-row span:first-child{color:var(--muted)}
+.booking-modal-row strong{text-align:right}
+@media(max-width:600px){
+  .container{padding:12px}
+  .section-title{font-size:18px;margin-top:22px}
+  .status{font-size:14px;padding:9px 13px}
+  .booking-calendar{min-width:0;width:100%}
+  .cal-day{min-height:54px;padding:5px}
+  .cal-number{font-size:11px;margin-bottom:2px}
+  .cal-booking{height:auto;width:100%;padding:2px 1px;margin:2px 0 0;border-radius:3px;font-size:7px;line-height:1.05;overflow:hidden}
+  .cal-booking.checkin{border-left:0;border:2px solid var(--ok)}
+  .cal-booking.checkout{border-left:0;opacity:.7}
+  .calendar-legend{gap:10px;flex-wrap:wrap}
+}
+
+/* V12 visual system */
+:root{
+ --accent:#315b49;--soft:#eaf1ec;--ok:#26845b;
+ --airbnb:#e34d5b;--booking:#3478cf;--direct:#269b79;--blocked:#8b9290;
+ --shadow:0 5px 22px rgba(28,39,32,.055);--radius:16px;
+}
+html[data-theme="dark"]{
+ --accent:#a8cbb6;--soft:#293a30;--airbnb:#ff727c;--booking:#78a9f4;--direct:#58c6a0;--blocked:#9aa29e;
+ --shadow:0 7px 24px rgba(0,0,0,.18);
+}
+.container{max-width:1440px;padding:24px 30px 40px}
+header{padding:20px 26px;border-radius:18px}
+.section-title{font-size:19px;font-weight:750;letter-spacing:-.25px;margin:27px 0 12px}
+.grid{gap:13px}
+.card{border-radius:16px;box-shadow:var(--shadow)}
+.metric-card{cursor:pointer;position:relative;min-height:112px;transition:transform .18s ease,border-color .18s ease}
+.metric-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.metric-card:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.metric-card .metric{font-size:28px;letter-spacing:-.7px}
+.metric-hint{font-size:11px;color:var(--muted);margin-top:7px}
+.metric-detail{display:none;margin-top:13px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;line-height:1.65;color:var(--muted)}
+.metric-card.expanded{grid-column:span 2;border-color:var(--accent)}
+.metric-card.expanded .metric-detail{display:block}
+.metric-card .expand-mark{position:absolute;right:16px;top:15px;color:var(--muted);font-size:17px}
+.two-col{gap:14px}
+.financial-table td{padding:10px 0}
+.financial-table .total td{color:var(--accent)}
+.booking-calendar-card{margin-top:14px}
+.calendar-scroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.booking-calendar{min-width:690px}
+.cal-day{min-height:104px}
+.cal-booking{font-size:10px;line-height:1.25;cursor:pointer}
+.cal-booking.airbnb{background:color-mix(in srgb,var(--airbnb) 16%,var(--card));color:var(--airbnb);border-left:3px solid var(--airbnb)}
+.cal-booking.bookingcom{background:color-mix(in srgb,var(--booking) 15%,var(--card));color:var(--booking);border-left:3px solid var(--booking)}
+.cal-booking.direct{background:color-mix(in srgb,var(--direct) 15%,var(--card));color:var(--direct);border-left:3px solid var(--direct)}
+.cal-booking.other{background:var(--source-bg);color:var(--source-text);border-left:3px solid var(--blocked)}
+.cal-booking.checkin{font-weight:850}
+.cal-booking.checkout{opacity:.72;border-left-style:dashed}
+.calendar-legend{gap:14px;flex-wrap:wrap}
+.legend-dot.airbnb{background:var(--airbnb);opacity:1}
+.legend-dot.bookingcom{background:var(--booking);opacity:1}
+.legend-dot.direct{background:var(--direct);opacity:1}
+.legend-dot.blocked{background:var(--blocked);opacity:1}
+.analytics-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.chart-card{min-width:0}
+.chart-bars{display:grid;gap:11px}
+.bar-row{display:grid;grid-template-columns:42px 1fr 62px;gap:10px;align-items:center;font-size:12px}
+.bar-track{height:10px;background:var(--source-bg);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;background:var(--accent)}
+.source-row{display:grid;grid-template-columns:95px 1fr 55px;gap:10px;align-items:center;margin:13px 0;font-size:12px}
+.source-track{height:11px;background:var(--source-bg);border-radius:99px;overflow:hidden}
+.source-fill{height:100%;border-radius:99px}
+.analytics-note{color:var(--muted);font-size:11px;margin-top:13px}
+.calendar-item{grid-template-columns:115px 1fr auto}
+.source.airbnb{background:color-mix(in srgb,var(--airbnb) 14%,var(--card));color:var(--airbnb)}
+.source.bookingcom{background:color-mix(in srgb,var(--booking) 14%,var(--card));color:var(--booking)}
+.source.direct{background:color-mix(in srgb,var(--direct) 14%,var(--card));color:var(--direct)}
+.month-row{grid-template-columns:130px 1fr 110px 100px}
+@media(max-width:700px){
+ .container{padding:12px 12px 28px}
+ header{padding:16px;gap:12px}
+ .logo{width:170px}
+ .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .card{padding:14px}
+ .metric-card{min-height:100px}
+ .metric-card .metric{font-size:21px}
+ .metric-card.expanded{grid-column:1/-1}
+ .metric-hint{font-size:10px}
+ .analytics-grid{grid-template-columns:1fr}
+ .calendar-scroll{margin:0 -2px}
+ .booking-calendar{min-width:660px}
+ .cal-day{min-height:78px}
+ .cal-booking{height:auto;width:auto;min-height:18px;padding:4px 5px;margin:4px 0 0;border-radius:6px;font-size:9px;line-height:1.2;white-space:nowrap}
+ .cal-booking.checkin{border-left:3px solid var(--airbnb)}
+ .cal-booking.checkout{border-left:3px dashed var(--blocked)}
+ .calendar-item{grid-template-columns:1fr auto;gap:6px}
+ .calendar-item>div:nth-child(2){grid-column:1/-1;grid-row:2}
+ .calendar-item .booking-price{grid-column:2;grid-row:1}
+ .month-row{grid-template-columns:1fr 1fr;gap:7px}
+ .section-title{margin-top:22px}
+}
+
+
+/* V13 enhancements */
+:root{--expedia:#e5b82f;--vrbo:#4b82c3;--other:#929b96;--purple:#8970c8;--orange:#e58a45}
+html[data-theme="dark"]{--expedia:#f2ce58;--vrbo:#82b4e8;--other:#aab2ad;--purple:#ad9ae8;--orange:#f2a76b}
+.grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.current-stay{margin-top:14px;border-left:4px solid var(--ok)}
+.current-stay-head{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer}
+.stay-summary{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stay-pill{display:inline-flex;align-items:center;gap:7px;background:color-mix(in srgb,var(--ok) 13%,var(--card));color:var(--ok);padding:7px 11px;border-radius:99px;font-size:12px;font-weight:800}
+.stay-details{display:none;margin-top:14px;padding-top:13px;border-top:1px solid var(--border);grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.current-stay.expanded .stay-details{display:grid}
+.stay-detail{background:var(--table);border-radius:11px;padding:11px}
+.stay-detail small{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.stay-detail strong{font-size:13px}
+.occupancy-gauge{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--direct) var(--gauge),var(--source-bg) 0);position:relative;flex:none}
+.occupancy-gauge:before{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--card)}
+.occupancy-gauge strong{position:relative;font-size:17px}
+.occupancy-inline{display:flex;align-items:center;gap:15px;margin-top:10px}
+.month-nav{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.month-nav-controls{display:flex;align-items:center;gap:8px}
+.month-nav button{width:32px;height:32px;border:1px solid var(--border);border-radius:9px;background:var(--table);color:var(--text);font-size:20px;cursor:pointer}
+.expandable-card{cursor:pointer;position:relative}
+.expandable-card .expand-hint{color:var(--muted);font-size:10px;margin-top:10px}
+.expandable-card .expanded-content{display:none;border-top:1px solid var(--border);margin-top:13px;padding-top:13px}
+.expandable-card.expanded .expanded-content{display:block}
+.expandable-card .expand-hint:after{content:" · Tap to expand"}
+.expandable-card.expanded .expand-hint:after{content:" · Tap to collapse"}
+.donut-wrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut{width:160px;height:160px;border-radius:50%;position:relative;flex:none}
+.donut:after{content:"";position:absolute;inset:27px;border-radius:50%;background:var(--card)}
+.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;z-index:1;font-weight:800}
+.donut-center small{font-size:10px;color:var(--muted);font-weight:600}
+.donut-legend{display:grid;gap:9px;min-width:190px;flex:1}
+.donut-legend-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}
+.donut-key{display:flex;align-items:center;gap:7px}
+.donut-swatch{width:9px;height:9px;border-radius:3px;display:inline-block}
+.month-performance{display:grid;grid-template-columns:repeat(12,minmax(52px,1fr));gap:9px;align-items:end;overflow-x:auto;padding:8px 0 4px}
+.performance-col{min-width:52px;text-align:center}
+.performance-bar-wrap{height:145px;display:flex;align-items:flex-end;background:var(--table);border-radius:9px;overflow:hidden}
+.performance-bar{width:100%;border-radius:8px 8px 0 0;background:linear-gradient(180deg,var(--direct),var(--accent));min-height:3px}
+.performance-value{font-size:10px;font-weight:750;margin:7px 0 4px;white-space:nowrap}
+.performance-month{font-size:10px;color:var(--muted)}
+.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.detail-stat{padding:11px;border-radius:10px;background:var(--table)}
+.detail-stat small{display:block;color:var(--muted);font-size:10px;margin-bottom:5px}
+.detail-stat strong{font-size:14px}
+.cal-booking.expedia{background:color-mix(in srgb,var(--expedia) 20%,var(--card));color:#98700b;border-left:3px solid var(--expedia)}
+html[data-theme="dark"] .cal-booking.expedia{color:var(--expedia)}
+.cal-booking.vrbo{background:color-mix(in srgb,var(--vrbo) 15%,var(--card));color:var(--vrbo);border-left:3px solid var(--vrbo)}
+.legend-dot.expedia{background:var(--expedia)}.legend-dot.vrbo{background:var(--vrbo)}
+@media(max-width:900px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){
+ .grid{display:flex;overflow-x:auto;gap:9px;padding-bottom:5px;scroll-snap-type:x proximity}
+ .metric-card{min-width:145px;flex:0 0 145px;scroll-snap-align:start}
+ .metric-card.expanded{min-width:280px;flex-basis:280px}
+ .stay-details{grid-template-columns:1fr 1fr}
+ .detail-grid{grid-template-columns:1fr 1fr}
+ .month-performance{grid-template-columns:repeat(12,52px)}
+}
+
+
+/* V14 mobile-first refinements */
+@media(max-width:600px){
+ .container{padding:10px}
+ .card{padding:12px;border-radius:13px}
+ .section-title{font-size:17px;margin:18px 0 10px}
+ #upcoming.calendar{gap:7px}
+ #upcoming .calendar-item{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:7px;align-items:center;padding:9px 10px;border-radius:11px}
+ #upcoming .calendar-date{font-size:11px;white-space:nowrap}
+ #upcoming .calendar-guest{font-size:12px;line-height:1.2}
+ #upcoming .booking-details{font-size:9px;line-height:1.25;margin-top:3px}
+ #upcoming .source{font-size:8px;padding:2px 5px;margin-top:3px}
+ #upcoming .booking-price{font-size:11px;white-space:nowrap}
+ .booking-calendar-card{padding:10px}
+ .calendar-toolbar{margin-bottom:9px}
+ .cal-month-title{font-size:15px}
+ .cal-btn{width:29px;height:29px;font-size:19px}
+ .calendar-scroll{overflow:hidden}
+ .booking-calendar{min-width:0!important;width:100%;table-layout:fixed}
+ .cal-weekday{font-size:8px;padding:5px 0;text-align:center}
+ .cal-day{min-width:0;min-height:58px!important;height:58px;padding:3px 2px!important;overflow:hidden}
+ .cal-number{font-size:10px;margin-bottom:1px}
+ .cal-booking{display:block;width:100%;height:auto!important;min-height:0;padding:2px 1px!important;margin:2px 0 0!important;border-radius:3px!important;font-size:7px!important;line-height:1.05!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .cal-booking.checkin{border-left:2px solid var(--ok)!important;border-radius:3px!important}
+ .cal-booking.checkout{border-left:2px solid var(--border)!important}
+ .calendar-legend{font-size:9px;gap:7px;margin-top:8px}
+ .month-performance{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;overflow:visible!important;gap:7px}
+ .performance-col{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:6px;min-width:0;text-align:left;background:var(--table);padding:7px;border-radius:9px}
+ .performance-bar-wrap{height:8px;border-radius:99px}
+ .performance-bar{height:100%!important;border-radius:99px}
+ .performance-value{font-size:10px;margin:0;white-space:nowrap}
+ .performance-month{font-size:9px}
+ .performance-col .performance-bar-wrap{grid-column:2;grid-row:1}
+ .performance-col .performance-value{grid-column:3;grid-row:1}
+ .performance-col .performance-month{grid-column:1;grid-row:1}
+ .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .detail-stat{padding:8px}
+ .detail-stat small{font-size:9px}
+ .detail-stat strong{font-size:12px}
+ .donut{width:112px;height:112px}
+ .donut:after{inset:20px}
+ .donut-center{font-size:11px}
+ .donut-legend{min-width:0;gap:6px}
+ .donut-legend-row{font-size:10px}
+ .expandable-card .expand-hint{display:flex;justify-content:flex-end;align-items:center;font-size:0;margin-top:8px}
+ .expandable-card .expand-hint:before{content:"";display:inline-block;width:22px;height:22px;border:1px solid var(--border);border-radius:7px;background:var(--table)}
+ .expandable-card .expand-hint:after{content:"＋";font-size:14px;position:absolute;right:23px;margin-top:-1px}
+ .expandable-card.expanded .expand-hint:after{content:"−"}
+}
+.expandable-card .expand-hint{position:relative}
+#occupancyChart .bar-row{transition:transform .15s ease}
+#occupancyChart .bar-row:hover{transform:translateX(3px)}
+#occupancyChart .bar-fill{background:linear-gradient(90deg,var(--direct),var(--purple))!important}
+#revenueChart .bar-fill{background:linear-gradient(90deg,var(--accent),var(--orange))}
+#upcoming .calendar-item{box-shadow:0 2px 9px rgba(20,40,30,.035)}
+
+</style>
+</head>
+<body>
+<main class="container">
+<div id="error" class="error"></div>
+<header>
+<img id="siteLogo" class="logo" src="assets/black-logo.png" alt="Villa Caetano">
+<div class="header-right">
+<div class="header-controls">
+<button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+<span id="themeIcon">☾</span>
+</button>
+<div>
+<div id="status" class="status"><span class="dot"></span><span>Loading...</span></div>
+<div id="lastSync" class="last-sync">Loading data...</div>
+</div>
+</div>
+</div>
+</header>
+
+<h2 class="section-title" id="overviewTitle">Current Month Overview</h2>
+<section class="grid" id="kpiGrid">
+<div class="card metric-card" tabindex="0" role="button" aria-expanded="false" data-expand><span class="expand-mark">＋</span><div class="metric-label">Owner Net</div><div id="ownerNet" class="metric">—</div><div class="metric-hint">Your share after deductions · Tap for breakdown</div><div class="metric-detail" id="ownerNetDetail">Owner payout after management share and TDS.</div></div>
+<div class="card metric-card" tabindex="0" role="button" aria-expanded="false" data-expand><span class="expand-mark">＋</span><div class="metric-label">Revenue ex-GST</div><div id="revenue" class="metric">—</div><div class="metric-hint">Rental revenue before GST · Tap for details</div><div class="metric-detail" id="revenueDetail">Revenue excluding GST for the selected month.</div></div>
+<div class="card metric-card" tabindex="0" role="button" aria-expanded="false" data-expand><span class="expand-mark">＋</span><div class="metric-label">Occupancy</div><div id="occupancy" class="metric">—</div><div class="metric-hint">Occupied nights / available nights</div><div class="metric-detail" id="occupancyDetail">Monthly occupancy rate.</div></div>
+<div class="card metric-card" tabindex="0" role="button" aria-expanded="false" data-expand><span class="expand-mark">＋</span><div class="metric-label">ADR</div><div id="adr" class="metric">—</div><div class="metric-hint">Average daily rate · Tap for calculation</div><div class="metric-detail" id="adrDetail">Revenue excluding GST divided by occupied nights.</div></div>
+<div class="card metric-card" tabindex="0" role="button" aria-expanded="false" data-expand><span class="expand-mark">＋</span><div class="metric-label">Bookings</div><div id="bookingCount" class="metric">—</div><div class="metric-hint">Confirmed reservations this month</div><div class="metric-detail" id="bookingDetail">Number of reservations in the selected month.</div></div>
+</section>
+<section class="card current-stay" id="currentStayCard">
+ <div class="current-stay-head" id="currentStayToggle" role="button" tabindex="0" aria-expanded="false">
+  <div><div class="card-title" style="margin-bottom:7px">Currently Occupied</div><div id="currentStaySummary" class="stay-summary"><span class="muted">Checking current occupancy…</span></div></div>
+  <strong id="currentStayMark" class="muted">＋</strong>
+ </div>
+ <div class="stay-details" id="currentStayDetails"></div>
+</section>
+
+<section class="two-col">
+<div class="card">
+<div class="month-nav"><div class="card-title" id="monthTitle" style="margin:0">Financial Overview</div><div class="month-nav-controls"><button id="financialPrev" type="button" aria-label="Previous month">‹</button><button id="financialNext" type="button" aria-label="Next month">›</button></div></div>
+<table class="financial-table">
+<tr><td>Revenue ex-GST</td><td id="fRevenue">—</td></tr>
+<tr><td>GST</td><td id="fGst">—</td></tr>
+<tr><td>Gross including GST</td><td id="fGross">—</td></tr>
+<tr><td>Manager 40%</td><td id="fManager">—</td></tr>
+<tr><td>Owner 60%</td><td id="fOwner">—</td></tr>
+<tr><td>TDS</td><td id="fTds">—</td></tr>
+<tr class="total"><td>Owner Net</td><td id="fNet">—</td></tr>
+</table>
+</div>
+<div class="card">
+<div class="card-title">Current Financial Year</div>
+<table class="financial-table">
+<tr><td>Financial Year</td><td id="fyName">—</td></tr>
+<tr><td>Revenue ex-GST</td><td id="fyRevenue">—</td></tr>
+<tr><td>Owner Net</td><td id="fyNet">—</td></tr>
+<tr><td>Occupancy</td><td id="fyOccupancy">—</td></tr>
+<tr><td>Bookings</td><td id="fyBookings">—</td></tr>
+<tr><td>Occupied Nights</td><td id="fyNights">—</td></tr>
+</table>
+</div>
+</section>
+
+<h2 class="section-title">Upcoming Bookings</h2>
+<section class="card"><div id="upcoming" class="calendar"></div></section>
+
+<section class="section-title">Booking Calendar</section>
+<div class="card booking-calendar-card">
+  <div class="calendar-toolbar">
+    <button id="calPrev" class="cal-btn" type="button">‹</button>
+    <div id="calMonth" class="cal-month-title"></div>
+    <button id="calNext" class="cal-btn" type="button">›</button>
+  </div>
+  <div class="calendar-scroll"><div class="booking-calendar" id="bookingCalendar"></div></div>
+  <div class="calendar-legend">
+    <span><i class="legend-dot airbnb"></i> Airbnb</span>
+    <span><i class="legend-dot bookingcom"></i> Booking.com</span>
+    <span><i class="legend-dot direct"></i> Direct</span>
+    <span><i class="legend-dot expedia"></i> Expedia</span>
+    <span><i class="legend-dot vrbo"></i> Vrbo</span>
+    <span><i class="legend-dot blocked"></i> Other</span>
+    <span>IN = check-in · OUT = check-out</span>
+  </div>
+</div>
+
+<h2 class="section-title">Revenue & Financial Analytics</h2>
+<section class="analytics-grid">
+ <div class="card chart-card expandable-card" data-analytics-expand><div class="card-title">Monthly Revenue</div><div id="revenueChart" class="chart-bars"><div class="muted">Loading revenue data…</div></div><div class="analytics-note">Revenue excluding GST, based on booking data.</div><div class="expand-hint">More revenue detail</div><div class="expanded-content" id="revenueExpanded"></div></div>
+ <div class="card chart-card expandable-card" data-analytics-expand><div class="card-title">Financial Breakdown</div><table class="financial-table">
+ <tr><td>Revenue ex-GST</td><td id="aRevenue">—</td></tr><tr><td>GST collected</td><td id="aGst">—</td></tr><tr><td>Gross incl. GST</td><td id="aGross">—</td></tr><tr><td>Manager commission</td><td id="aManager">—</td></tr><tr><td>Owner share</td><td id="aOwner">—</td></tr><tr><td>TDS</td><td id="aTds">—</td></tr><tr class="total"><td>Owner Net</td><td id="aNet">—</td></tr>
+ </table><div class="expand-hint">Detailed monthly breakdown</div><div class="expanded-content" id="financialExpanded"></div></div>
+</section>
+<h2 class="section-title">Booking Source Analysis</h2>
+<section class="card expandable-card" data-analytics-expand><div class="card-title">Bookings and revenue by channel</div><div id="sourceAnalytics"><div class="muted">Loading booking sources…</div></div><div class="expand-hint">Channel details</div><div class="expanded-content" id="sourceExpanded"></div></section>
+<h2 class="section-title">Occupancy Analysis</h2>
+<section class="card expandable-card" data-analytics-expand><div class="card-title">Monthly occupancy <span class="muted" style="font-size:11px;font-weight:500">· tap ＋ for details</span></div><div id="occupancyChart" class="chart-bars"><div class="muted">Loading occupancy data…</div></div><div class="analytics-note">Occupancy is calculated using occupied nights against calendar nights in each month.</div><div class="expand-hint">More occupancy analysis</div><div class="expanded-content" id="occupancyExpanded"></div></section>
+
+<h2 class="section-title">Monthly Performance</h2>
+<section class="card expandable-card" data-analytics-expand><div class="card-title" style="margin-bottom:8px">Monthly Performance</div><div id="monthly"></div><div class="expand-hint">Monthly performance details</div><div class="expanded-content" id="monthlyExpanded"></div></section>
+
+
+<div id="bookingModal" class="booking-modal" role="dialog" aria-modal="true" aria-labelledby="bookingModalTitle">
+  <div class="booking-modal-card">
+    <div class="booking-modal-head">
+      <div id="bookingModalTitle" class="booking-modal-title">Booking details</div>
+      <button id="bookingModalClose" class="booking-modal-close" type="button" aria-label="Close">×</button>
+    </div>
+    <div id="bookingModalDetails" class="booking-modal-details"></div>
+  </div>
+</div>
+<footer>Villa Caetano · Rental Dashboard</footer>
+</main>
+
+<script>
+(function(){
+  const saved = localStorage.getItem("vc-theme");
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved || (prefersDark ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+  window.addEventListener("DOMContentLoaded", function(){
+    const logo = document.getElementById("siteLogo");
+    if (logo) logo.src = theme === "dark"
+      ? "assets/logo-white.png"
+      : "assets/black-logo.png";
+  });
+
+  window.addEventListener("DOMContentLoaded", function(){
+    const button = document.getElementById("themeToggle");
+    const icon = document.getElementById("themeIcon");
+    function updateIcon(){
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      const logo = document.getElementById("siteLogo");
+      if (logo) {
+        logo.src = dark
+          ? "assets/logo-white.png"
+          : "assets/black-logo.png";
+      }
+      icon.textContent = dark ? "☀" : "☾";
+      button.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+      button.title = dark ? "Switch to light theme" : "Switch to dark theme";
+    }
+    updateIcon();
+    document.querySelectorAll("[data-expand]").forEach(card=>{
+      const toggle=()=>{const open=card.classList.toggle("expanded");card.setAttribute("aria-expanded",String(open));const mark=card.querySelector(".expand-mark");if(mark)mark.textContent=open?"−":"＋";};
+      card.addEventListener("click",toggle);
+      card.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();}});
+    });
+    button.addEventListener("click", function(){
+      const dark = document.documentElement.getAttribute("data-theme") === "dark";
+      const next = dark ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      localStorage.setItem("vc-theme", next);
+      updateIcon();
+    });
+  });
+})();
+</script>
+<script>
+const SUPABASE_URL=
+"https://xmpnwjsqisdvwpoyrgnv.supabase.co";
+const SUPABASE_KEY="sb_publishable_zxOKE_9GzAg0qXfMXxY6iw__KFKMih6";
+const RPC_URL=`${SUPABASE_URL}/rest/v1/rpc/get_villa_caetano_dashboard`;
+
+const money=v=>"₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:0});
+const dateShort=v=>{if(!v)return"—";return new Date(v+"T00:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})};
+const esc=v=>String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+
+async function loadDashboard(){
+ try{
+  const r=await fetch(RPC_URL,{method:"POST",headers:{"apikey":SUPABASE_KEY,"Authorization":`Bearer ${SUPABASE_KEY}`,"Content-Type":"application/json"},body:"{}"});
+  if(!r.ok)throw new Error(`Supabase returned HTTP ${r.status}`);
+  renderDashboard(await r.json());
+ }catch(e){
+  console.error(e);
+  const box=document.getElementById("error");box.style.display="block";
+  box.textContent="Unable to load Villa Caetano data. Check the Supabase URL/key and RPC permissions.";
+ }
+}
+
+
+function sourceKey(s){
+ const x=String(s||"").toLowerCase();
+ if(x.includes("airbnb"))return "airbnb";
+ if(x.includes("direct"))return "direct";
+ return "other";
+}
+function nightsInMonth(bookings,year,month){
+ const start=new Date(year,month,1),end=new Date(year,month+1,1);
+ return (bookings||[]).reduce((sum,b)=>{
+  if(!b.check_in||!b.check_out)return sum;
+  const a=new Date(b.check_in+"T00:00:00"),z=new Date(b.check_out+"T00:00:00");
+  const from=Math.max(a.getTime(),start.getTime()),to=Math.min(z.getTime(),end.getTime());
+  return sum+Math.max(0,Math.round((to-from)/86400000));
+ },0);
+}
+let dashboardData=null;
+let selectedFinancialKey=null;
+function monthKey(m){return `${m.year}-${String(m.month).padStart(2,"0")}`;}
+function sortedMonths(d){return Object.values(d.months||{}).sort((a,b)=>monthKey(a).localeCompare(monthKey(b)));}
+function selectedMonth(d){
+ const months=sortedMonths(d); if(!months.length)return null;
+ if(!selectedFinancialKey){const nowKey=new Date().toISOString().slice(0,7);selectedFinancialKey=d.months?.[nowKey]?nowKey:monthKey(months[months.length-1]);}
+ return d.months?.[selectedFinancialKey]||months[months.length-1];
+}
+function setFinancialMonth(delta){
+ if(!dashboardData)return;
+ const months=sortedMonths(dashboardData),idx=months.findIndex(m=>monthKey(m)===selectedFinancialKey);
+ const next=months[Math.max(0,Math.min(months.length-1,(idx<0?months.length-1:idx)+delta))];
+ if(next){selectedFinancialKey=monthKey(next);renderFinancialMonth(dashboardData);}
+}
+function renderFinancialMonth(d){
+ const m=selectedMonth(d);if(!m)return;
+ document.getElementById("monthTitle").textContent=`${m.month_name} ${m.year} Financial Overview`;
+ [["fRevenue",m.nbv],["fGst",m.gst],["fGross",m.gross_including_gst],["fManager",m.manager_40],["fOwner",m.owner_60],["fTds",m.tds],["fNet",m.owner_net]].forEach(([id,v])=>document.getElementById(id).textContent=money(v));
+ document.getElementById("financialExpanded").innerHTML=`<div class="detail-grid">${[["Bookings",m.bookings],["Occupied nights",m.occupied_nights??"—"],["Occupancy",`${m.occupancy_rate}%`],["Revenue ex-GST",money(m.nbv)],["Manager share",money(m.manager_40)],["Owner net",money(m.owner_net)]].map(([l,v])=>`<div class="detail-stat"><small>${l}</small><strong>${v}</strong></div>`).join("")}</div>`;
+}
+function renderAnalytics(d){
+ const months=sortedMonths(d),recent=months.slice(-12),maxRev=Math.max(1,...recent.map(x=>Number(x.nbv||0)));
+ const current=selectedMonth(d);
+ document.getElementById("revenueChart").innerHTML=recent.length?recent.map(x=>`<div class="bar-row"><span>${esc(x.month_name.slice(0,3))}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,Number(x.nbv||0)/maxRev*100)}%"></div></div><strong>${money(x.nbv)}</strong></div>`).join(""):'<div class="muted">No monthly revenue data available.</div>';
+ document.getElementById("revenueExpanded").innerHTML=`<div class="detail-grid">${recent.map(x=>`<div class="detail-stat"><small>${esc(x.month_name)} ${x.year}</small><strong>${money(x.nbv)}</strong><div class="muted">${x.bookings||0} bookings · ${x.occupancy_rate||0}% occupied</div></div>`).join("")}</div>`;
+ document.getElementById("occupancyChart").innerHTML=recent.length?recent.map(x=>`<div class="bar-row"><span>${esc(x.month_name.slice(0,3))}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.max(0,Math.min(100,Number(x.occupancy_rate||0)))}%;background:var(--direct)"></div></div><strong>${Number(x.occupancy_rate||0)}%</strong></div>`).join(""):'<div class="muted">No occupancy data available.</div>';
+ const avgOcc=recent.length?recent.reduce((s,x)=>s+Number(x.occupancy_rate||0),0)/recent.length:0;
+ document.getElementById("occupancyExpanded").innerHTML=`<div class="detail-grid"><div class="detail-stat"><small>Average occupancy · last ${recent.length} months</small><strong>${avgOcc.toFixed(1)}%</strong></div><div class="detail-stat"><small>Highest occupancy</small><strong>${recent.length?Math.max(...recent.map(x=>Number(x.occupancy_rate||0))).toFixed(1)+"%":"—"}</strong></div><div class="detail-stat"><small>Lowest occupancy</small><strong>${recent.length?Math.min(...recent.map(x=>Number(x.occupancy_rate||0))).toFixed(1)+"%":"—"}</strong></div></div><p class="analytics-note">Monthly occupancy compares occupied nights with the available calendar nights in each month. Use the monthly values above to identify seasonal changes.</p>`;
+ if(current){
+  [["aRevenue",current.nbv],["aGst",current.gst],["aGross",current.gross_including_gst],["aManager",current.manager_40],["aOwner",current.owner_60],["aTds",current.tds],["aNet",current.owner_net]].forEach(([id,v])=>document.getElementById(id).textContent=money(v));
+  const nights=Number(current.occupied_nights||nightsInMonth(d.bookings,Number(current.year),Number(current.month)-1));
+  const adr=nights?Number(current.nbv||0)/nights:0;
+  document.getElementById("adr").textContent=nights?money(adr):"—";
+  document.getElementById("adrDetail").textContent=nights?`${money(current.nbv)} revenue ex-GST ÷ ${nights} occupied nights = ${money(adr)} ADR.`:"ADR will appear when occupied-night data is available.";
+  document.getElementById("occupancyDetail").textContent=`${current.occupancy_rate}% occupancy for ${current.month_name}. ${nights} occupied nights recorded.`;
+  document.getElementById("ownerNetDetail").textContent=`Owner share: ${money(current.owner_60)} · TDS: ${money(current.tds)} · Net: ${money(current.owner_net)}.`;
+  document.getElementById("revenueDetail").textContent=`${money(current.nbv)} rental revenue excluding GST; gross including GST is ${money(current.gross_including_gst)}.`;
+  document.getElementById("bookingDetail").textContent=`${current.bookings} reservations recorded for ${current.month_name} ${current.year}.`;
+  document.getElementById("occupancy").innerHTML=`<div class="occupancy-inline"><span class="occupancy-gauge" style="--gauge:${Math.max(0,Math.min(100,Number(current.occupancy_rate||0)))}%"><strong>${Number(current.occupancy_rate||0)}%</strong></span></div>`;
+ }
+ const sources={};
+ (d.bookings||[]).forEach(b=>{
+  const key=sourceKey(b.source);if(!sources[key])sources[key]={label:key==="airbnb"?"Airbnb":key==="direct"?"Direct":"Other",count:0,revenue:0};
+  sources[key].count++;sources[key].revenue+=Number(b.nbv||0);
+ });
+ const entries=Object.entries(sources),total=entries.reduce((s,[k,x])=>s+x.revenue,0);
+ const palette={airbnb:"var(--airbnb)",bookingcom:"var(--booking)",direct:"var(--direct)",expedia:"var(--expedia)",vrbo:"var(--vrbo)",other:"var(--blocked)"};
+ let cursor=0;const stops=entries.map(([k,x])=>{const a=cursor;cursor+=total?x.revenue/total*100:0;return `${palette[k]||"var(--other)"} ${a}% ${cursor}%`;});
+ document.getElementById("sourceAnalytics").innerHTML=entries.length?`<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${stops.join(",")})"><div class="donut-center">${money(total)}<small>Total revenue</small></div></div><div class="donut-legend">${entries.map(([k,x])=>`<div class="donut-legend-row"><span class="donut-key"><i class="donut-swatch" style="background:${palette[k]||"var(--other)"}"></i>${esc(x.label)}</span><strong>${total?Math.round(x.revenue/total*100):0}%</strong></div>`).join("")}</div></div>`:'<div class="muted">No booking source data available.</div>';
+ document.getElementById("sourceExpanded").innerHTML=entries.length?`<div class="detail-grid">${entries.map(([k,x])=>`<div class="detail-stat"><small>${esc(x.label)}</small><strong>${x.count} bookings</strong><div class="muted">${money(x.revenue)} revenue · ${total?(x.revenue/total*100).toFixed(1):0}%</div></div>`).join("")}</div>`:"No source details available.";
+ document.getElementById("revenueExpanded").insertAdjacentHTML("beforeend",`<p class="analytics-note">Selected month: ${current?esc(current.month_name+" "+current.year):"—"} · Revenue ex-GST ${current?money(current.nbv):"—"} · Owner net ${current?money(current.owner_net):"—"}</p>`);
+ renderFinancialMonth(d);
+}
+
+
+function renderCurrentStay(d){
+ const card=document.getElementById("currentStayCard"),summary=document.getElementById("currentStaySummary"),details=document.getElementById("currentStayDetails");
+ const b=d.current;
+ if(!d.occupied||!b){
+  summary.innerHTML='<span class="stay-pill">● Currently vacant</span><span class="muted">No guest checked in at the moment.</span>';
+  details.innerHTML="";card.style.borderLeftColor="var(--border)";return;
+ }
+ const today=new Date();today.setHours(0,0,0,0);
+ const out=new Date(String(b.check_out||"").slice(0,10)+"T00:00:00");
+ const days=Math.max(0,Math.round((out-today)/86400000));
+ const checkoutLabel=days===0?"Checkout today":days===1?"Checkout tomorrow":days===2?"Checkout in 2 days":days===3?"Checkout in 3 days":`Checkout on ${dateShort(b.check_out)}`;
+ const nights=Number(b.nights)||Math.max(0,Math.round((out-new Date(String(b.check_in).slice(0,10)+"T00:00:00"))/86400000));
+ summary.innerHTML=`<span class="stay-pill">● OCCUPIED · ${esc(b.guest||"Current guest")}</span><strong>${checkoutLabel}</strong><span class="muted">${dateShort(b.check_in)} → ${dateShort(b.check_out)}</span>`;
+ details.innerHTML=[
+  ["Guest",esc(b.guest||"—")],["Check-in",dateShort(b.check_in)],["Check-out",dateShort(b.check_out)],
+  ["Stay duration",`${nights} nights`],["Guests",`${esc(b.adults??"—")} adults${Number(b.kids)?` · ${esc(b.kids)} kids`:""}`],
+  ["Booking channel",esc(b.source||"—")],["Reservation ID",esc(b.reservation_id||"—")],["Booking value",money(b.nbv)]
+ ].map(([l,v])=>`<div class="stay-detail"><small>${l}</small><strong>${v}</strong></div>`).join("");
+ card.style.borderLeftColor="var(--ok)";
+}
+
+function renderDashboard(d){
+ dashboardData=d;
+ const status=document.getElementById("status");
+ status.innerHTML=d.occupied&&d.current?`<span class="dot"></span> OCCUPIED`:`<span class="dot"></span> VACANT`;
+ renderCurrentStay(d);
+
+ if(d.last_sync?.completed_at){
+  const x=new Date(d.last_sync.completed_at);
+  document.getElementById("lastSync").textContent=`Last synced ${x.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})} · ${d.last_sync.records_processed||0} bookings`;
+ }else document.getElementById("lastSync").textContent="Last sync unavailable";
+
+ const currentKey=new Date().toISOString().slice(0,7),m=d.months?.[currentKey]||sortedMonths(d).slice(-1)[0];
+ if(m){
+  selectedFinancialKey=selectedFinancialKey||monthKey(m);
+  ownerNet.textContent=money(m.owner_net);revenue.textContent=money(m.nbv);
+  occupancy.textContent=`${m.occupancy_rate}%`;bookingCount.textContent=m.bookings;
+  document.getElementById("overviewTitle").textContent=`${m.month_name} ${m.year} Overview`;
+  renderFinancialMonth(d);
+ }
+
+ const now=new Date();
+ const fyKey=now.getMonth()>=3?`FY ${now.getFullYear()}-${String(now.getFullYear()+1).slice(-2)}`:`FY ${now.getFullYear()-1}-${String(now.getFullYear()).slice(-2)}`;
+ const fy=d.financial_years?.[fyKey];
+ if(fy){
+  fyName.textContent=fy.financial_year;fyRevenue.textContent=money(fy.nbv);fyNet.textContent=money(fy.owner_net);
+  fyOccupancy.textContent=`${fy.occupancy_rate}%`;fyBookings.textContent=fy.bookings;fyNights.textContent=fy.occupied_nights;
+ }
+
+ const today=new Date().toISOString().slice(0,10);
+ const upcoming=(d.bookings||[]).filter(b=>b.check_in>=today).sort((a,b)=>a.check_in.localeCompare(b.check_in));
+ document.getElementById("upcoming").innerHTML=upcoming.length?upcoming.map(b=>`
+ <div class="calendar-item">
+  <div class="calendar-date">${dateShort(b.check_in)}</div>
+  <div><div class="calendar-guest">${esc(b.guest)}</div>
+  <div class="booking-details">${dateShort(b.check_in)} → ${dateShort(b.check_out)} · ${b.nights} night${Number(b.nights)===1?"":"s"} · ${b.adults} adults${Number(b.kids)?` · ${b.kids} kids`:""}</div>
+  <span class="source ${sourceKey(b.source)}">${esc(b.source)}</span></div>
+  <div class="booking-price">${money(b.nbv)}</div>
+ </div>`).join(""):`<div class="muted">No upcoming bookings.</div>`;
+
+ const months=Object.values(d.months||{}).sort((a,b)=>`${a.year}-${String(a.month).padStart(2,"0")}`.localeCompare(`${b.year}-${String(b.month).padStart(2,"0")}`));
+ const maxOwner=Math.max(1,...months.map(x=>Number(x.owner_net||0)));
+ document.getElementById("monthly").innerHTML=months.length?`<div class="month-performance">${months.map(x=>`<div class="performance-col"><div class="performance-month">${esc(x.month_name.slice(0,3))} '${String(x.year).slice(-2)}</div><div class="performance-bar-wrap"><div class="performance-bar" style="width:${Math.max(2,Number(x.owner_net||0)/maxOwner*100)}%"></div></div><div class="performance-value">${money(x.owner_net)}</div></div>`).join("")}</div>`:`<div class="muted">No monthly data available.</div>`;
+ document.getElementById("monthlyExpanded").innerHTML=months.length?`<div class="detail-grid">${months.map(x=>`<div class="detail-stat"><small>${esc(x.month_name)} ${x.year}</small><strong>${money(x.owner_net)} owner net</strong><div class="muted">${money(x.nbv)} revenue · ${x.occupancy_rate}% occupancy · ${x.bookings} bookings</div></div>`).join("")}</div>`:"";
+
+ renderAnalytics(d);
+ // Feed the same Supabase booking data directly into the calendar.
+ if (window.renderBookingCalendar) {
+   window.renderBookingCalendar(d.bookings || []);
+ }
+}
+loadDashboard();setInterval(loadDashboard,5*60*1000);
+</script>
+
+<script>
+(function(){
+  let calendarDate = new Date();
+  let bookingData = [];
+
+  function parseLocalDate(s){
+    const p = String(s).split("-");
+    return new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+  }
+  function dateKey(d){
+    return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  }
+  function esc(s){
+    return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function openBooking(b){
+    const modal = document.getElementById("bookingModal");
+    const details = document.getElementById("bookingModalDetails");
+    if(!modal || !details || !b) return;
+
+    document.getElementById("bookingModalTitle").textContent = b.guest || "Booking details";
+    details.innerHTML = `
+      <div class="booking-modal-row"><span>Stay</span><strong>${esc(b.check_in)} → ${esc(b.check_out)}</strong></div>
+      <div class="booking-modal-row"><span>Nights</span><strong>${esc(b.nights)}</strong></div>
+      <div class="booking-modal-row"><span>Guests</span><strong>${esc(b.adults)} adults${Number(b.kids) ? ` · ${esc(b.kids)} kids` : ""}</strong></div>
+      <div class="booking-modal-row"><span>Source</span><strong>${esc(b.source)}</strong></div>
+      <div class="booking-modal-row"><span>Reservation</span><strong>${esc(b.reservation_id)}</strong></div>
+      <div class="booking-modal-row"><span>Booking value</span><strong>${money(b.nbv)}</strong></div>
+    `;
+    modal.classList.add("show");
+  }
+
+  function closeBooking(){
+    document.getElementById("bookingModal")?.classList.remove("show");
+  }
+
+  window.renderBookingCalendar = function(bookings){
+    bookingData = Array.isArray(bookings) ? bookings : [];
+    const root = document.getElementById("bookingCalendar");
+    const title = document.getElementById("calMonth");
+    if(!root || !title) return;
+
+    const y = calendarDate.getFullYear();
+    const m = calendarDate.getMonth();
+    title.textContent = calendarDate.toLocaleDateString("en-GB",{month:"long",year:"numeric"});
+
+    const first = new Date(y,m,1);
+    const days = new Date(y,m+1,0).getDate();
+    const offset = (first.getDay()+6)%7;
+    const today = dateKey(new Date());
+
+    let out = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"]
+      .map(x=>`<div class="cal-weekday">${x}</div>`).join("");
+
+    for(let i=0;i<offset;i++) out += `<div class="cal-day empty"></div>`;
+
+    for(let d=1;d<=days;d++){
+      const date = new Date(y,m,d);
+      const key = dateKey(date);
+
+      const staying = bookingData.filter(b =>
+        b.check_in && b.check_out && key >= b.check_in && key < b.check_out
+      );
+      const checkouts = bookingData.filter(b => b.check_out === key);
+
+      let content = `<div class="cal-number">${d}</div>`;
+
+      staying.slice(0,3).forEach(b=>{
+        const ci = b.check_in === key;
+        const channel = sourceKey(b.source);
+        content += `<div class="cal-booking ${channel} ${ci?'checkin':'stay'}"
+          data-booking="${esc(b.reservation_id)}"
+          title="${esc(b.guest)} · ${ci?'Check-in · ':''}${esc(b.check_in)} → ${esc(b.check_out)}">${ci?'IN · ':''}${esc(b.guest)}</div>`;
+      });
+
+      if(staying.length > 3)
+        content += `<div class="muted" style="font-size:10px;margin-top:3px">+${staying.length-3} more</div>`;
+
+      checkouts.slice(0,2).forEach(b=>{
+        content += `<div class="cal-booking ${sourceKey(b.source)} checkout"
+          data-booking="${esc(b.reservation_id)}"
+          title="${esc(b.guest)} · Check-out">${esc(b.guest)} · OUT</div>`;
+      });
+
+      out += `<div class="cal-day ${key===today?'today':''}">${content}</div>`;
+    }
+
+    root.innerHTML = out;
+
+    root.querySelectorAll("[data-booking]").forEach(el=>{
+      el.addEventListener("click",()=>{
+        const id = el.dataset.booking;
+        const booking = bookingData.find(b => String(b.reservation_id) === String(id));
+        if(booking) openBooking(booking);
+      });
+    });
+  };
+
+  document.addEventListener("DOMContentLoaded",()=>{
+    document.getElementById("calPrev")?.addEventListener("click",()=>{
+      calendarDate.setMonth(calendarDate.getMonth()-1);
+      window.renderBookingCalendar(bookingData);
+    });
+
+    document.getElementById("calNext")?.addEventListener("click",()=>{
+      calendarDate.setMonth(calendarDate.getMonth()+1);
+      window.renderBookingCalendar(bookingData);
+    });
+
+  
+  document.getElementById("currentStayToggle")?.addEventListener("click",()=>{
+    const card=document.getElementById("currentStayCard"),open=card.classList.toggle("expanded");
+    document.getElementById("currentStayToggle").setAttribute("aria-expanded",String(open));
+    document.getElementById("currentStayMark").textContent=open?"−":"＋";
+  });
+  document.getElementById("currentStayToggle")?.addEventListener("keydown",e=>{
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();document.getElementById("currentStayToggle").click();}
+  });
+  document.getElementById("financialPrev")?.addEventListener("click",()=>setFinancialMonth(-1));
+  document.getElementById("financialNext")?.addEventListener("click",()=>setFinancialMonth(1));
+  document.querySelectorAll("[data-analytics-expand]").forEach(card=>card.addEventListener("click",e=>{
+    if(e.target.closest("button,a"))return;card.classList.toggle("expanded");
+  }));
+
+  document.getElementById("bookingModalClose")?.addEventListener("click", closeBooking);
+    document.getElementById("bookingModal")?.addEventListener("click", e=>{
+      if(e.target.id === "bookingModal") closeBooking();
+    });
+    document.addEventListener("keydown", e=>{
+      if(e.key === "Escape") closeBooking();
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
